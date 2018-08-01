@@ -5,6 +5,7 @@
  */
 package criptosubstituicao;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.io.File;
@@ -18,6 +19,10 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 /**
  *
@@ -161,8 +166,8 @@ public class FramePrincipal extends javax.swing.JFrame
         jScrollPane4 = new javax.swing.JScrollPane();
         cifraTable = new javax.swing.JTable();
         jPanel5 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        arqTextArea = new javax.swing.JTextArea();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        arqTextJTextPane = new javax.swing.JTextPane();
         verFreqLetrasJButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -662,23 +667,23 @@ public class FramePrincipal extends javax.swing.JFrame
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Conteúdo do Arquivo"));
 
-        arqTextArea.setEditable(false);
-        arqTextArea.setColumns(20);
-        arqTextArea.setLineWrap(true);
-        arqTextArea.setRows(5);
-        jScrollPane3.setViewportView(arqTextArea);
+        jScrollPane1.setViewportView(arqTextJTextPane);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1)
+                .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addComponent(jScrollPane3)
-                .addGap(25, 25, 25))
+                .addContainerGap()
+                .addComponent(jScrollPane1)
+                .addContainerGap())
         );
 
         verFreqLetrasJButton.setText("<html><center>Ver Freq<br/>Letras</center></html>");
@@ -829,7 +834,7 @@ public class FramePrincipal extends javax.swing.JFrame
             
             textoOriginal = "";
             freqLetras = null;
-            arqTextArea.setText("");
+            arqTextJTextPane.setText("");
             cifraTable.setEnabled(false);
             verFreqLetrasJButton.setEnabled(false);
             this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
@@ -837,11 +842,11 @@ public class FramePrincipal extends javax.swing.JFrame
         }
         
         textoOriginal = conteudo;
-        arqTextArea.setText(conteudo);
+        mostraConteudo(textoOriginal);
         cifraTable.setEnabled(true);
         verFreqLetrasJButton.setEnabled(true);
         freqLetras = arq.getFrequenciaLetras();
-        arqTextArea.setCaretPosition(0);
+        arqTextJTextPane.setCaretPosition(0);
         
         // limpa cifra de substituição
         desabilitaAlteracoesTabelaCifra();
@@ -855,6 +860,57 @@ public class FramePrincipal extends javax.swing.JFrame
 
         this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
     }//GEN-LAST:event_lerArqEntradaJButtonActionPerformed
+
+    private void mostraConteudo(String conteudo)
+    {
+        // apaga conteúdo mostrado na tela
+        arqTextJTextPane.setText("");
+        
+        StyledDocument doc = arqTextJTextPane.getStyledDocument();
+        Style estilo = arqTextJTextPane.addStyle("estilo", null);
+
+        char c;
+        String str;
+        boolean minusculo = false;
+        int i = 0;
+        while(i < conteudo.length())
+        {
+            c = conteudo.charAt(i);
+            if(i == 0)
+                minusculo = Character.isLowerCase(c);
+
+            if(minusculo)
+                StyleConstants.setForeground(estilo, Color.red);
+            else
+                StyleConstants.setForeground(estilo, Color.black);
+            
+            str = String.valueOf(c);
+            
+            // proximo caractere
+            ++i;
+            if(i < conteudo.length())
+                c = conteudo.charAt(i);
+            
+            while((Character.isLowerCase(c) == minusculo) &&
+                  (i < conteudo.length()))
+            {
+                str += c;
+                ++i;
+                if(i < conteudo.length())
+                    c = conteudo.charAt(i);
+            }
+            
+            try
+            {
+                doc.insertString(doc.getLength(), str, estilo);
+            }
+            catch (BadLocationException e)
+            {
+            }
+            
+            minusculo = !minusculo;
+        }
+    }
 
     private void buscaArqSaidaJButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_buscaArqSaidaJButtonActionPerformed
     {//GEN-HEADEREND:event_buscaArqSaidaJButtonActionPerformed
@@ -874,7 +930,7 @@ public class FramePrincipal extends javax.swing.JFrame
         ArquivoTexto arq = new ArquivoTexto(arqSaidaTextField.getText());
         
         // grava arquivo e mostra mensagem
-        if(arq.gravarArquivo(arqTextArea.getText()))
+        if(arq.gravarArquivo(arqTextJTextPane.getText()))
         {
             JOptionPane.showMessageDialog(null,
                     "Arquivo gravado com sucesso",
@@ -929,8 +985,8 @@ public class FramePrincipal extends javax.swing.JFrame
            s += c;
         }                
         
-        arqTextArea.setText(s);    // mostra novo conteúdo
-        arqTextArea.setCaretPosition(0);
+        mostraConteudo(s);
+        arqTextJTextPane.setCaretPosition(0);
     }
     
     // valida cifra de substituição
@@ -998,7 +1054,7 @@ public class FramePrincipal extends javax.swing.JFrame
     private javax.swing.JLabel aJLabel;
     private javax.swing.JTextField arqEntradaTextField;
     private javax.swing.JTextField arqSaidaTextField;
-    private javax.swing.JTextArea arqTextArea;
+    private javax.swing.JTextPane arqTextJTextPane;
     private javax.swing.JLabel bJLabel;
     private javax.swing.JButton buscaArqEntradaJButton;
     private javax.swing.JButton buscaArqSaidaJButton;
@@ -1018,7 +1074,7 @@ public class FramePrincipal extends javax.swing.JFrame
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JLabel kJLabel;
     private javax.swing.JLabel lJLabel;
